@@ -329,6 +329,10 @@ void showParty(CRGB on, CRGB off) {
 void handleBluetooth() {
   while (btSerial.available() >= 4) {
     byte type = btSerial.read();
+        Serial.print("~~BT:");
+        Serial.print((char) type);
+        Serial.print('\n');
+
     switch (type) {
       case 'F': { //foreground color
         byte red = btSerial.read();
@@ -353,6 +357,14 @@ void handleBluetooth() {
         byte h = btSerial.read();
         byte m = btSerial.read();
         byte s = btSerial.read();
+        
+        Serial.print("Setting time to ");
+        Serial.print(h);
+        Serial.print(':');
+        Serial.print(m);
+        Serial.print(':');
+        Serial.print(s);
+
         setTime(h, m, s, day(), month(), year());
         RTC.set(now());
         break;
