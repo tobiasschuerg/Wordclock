@@ -137,8 +137,6 @@ void setup() {
 void loop()
 {
   generateWords();
-
-  handleBluetooth();
   
   showCorners(foreground, background);
   
@@ -156,6 +154,8 @@ void loop()
   
   FastLED.show();
   delay(100);
+
+  handleBluetooth();
 }
 
 /**
@@ -329,9 +329,9 @@ void showParty(CRGB on, CRGB off) {
 void handleBluetooth() {
   while (btSerial.available() >= 4) {
     byte type = btSerial.read();
-        Serial.print("~~BT:");
-        Serial.print((char) type);
-        Serial.print('\n');
+//        Serial.print("~~BT:");
+//        Serial.print((char) type);
+//        Serial.print('\n');
 
     switch (type) {
       case 'F': { //foreground color
@@ -363,7 +363,7 @@ void handleBluetooth() {
         Serial.print(':');
         Serial.print(m);
         Serial.print(':');
-        Serial.print(s);
+        Serial.println(s);
 
         setTime(h, m, s, day(), month(), year());
         RTC.set(now());
