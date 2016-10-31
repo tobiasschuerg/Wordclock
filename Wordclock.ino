@@ -4,7 +4,7 @@
 #include <SoftwareSerial.h>
 #include <FastLED.h>
 #include <DS3232RTC.h>    //http://github.com/JChristensen/DS3232RTC
-#include <Time.h>         //https://github.com/PaulStoffregen/Time
+#include <TimeLib.h>         //https://github.com/PaulStoffregen/Time
 #include <Timezone.h>     //https://github.com/JChristensen/Timezone
 #include <Wire.h>         //http://arduino.cc/en/Reference/Wire (included with Arduino IDE)
 
@@ -574,3 +574,4 @@ void showChar(byte x, byte y, unsigned char c, CRGB color) {
   }
 }
  */
+
