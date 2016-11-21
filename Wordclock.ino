@@ -27,7 +27,7 @@ const byte UHR[] =     {9, 8, 3};
 const byte HOUR[][3] = {
   //EIN       EINS       ZWEI       DREI       VIER       FUENF
   {5, 2, 3}, {5, 2, 4}, {5, 0, 4}, {6, 1, 4}, {7, 7, 4}, {6, 7, 4},
-  //SECHS     SIEBEN     ACHT       NEUN       ZEHN       ELF        ZWÖLF
+  //SECHS     SIEBEN     ACHT       NEUN       ZEHN       ELF        ZWOELF
   {9, 1, 5}, {5, 5, 6}, {8, 1, 4}, {7, 3, 4}, {8, 5, 4}, {7, 0, 3}, {4, 5, 5}
 };
 
@@ -58,7 +58,7 @@ CRGB background = CRGB(5, 5, 5); //CRGB(0, 255, 0) CRGB(10, 50, 5)
 /**
    Stores the effect number.
 */
-byte effect = 2;
+byte effect = 6;
 
 /**
    Hardware version.
@@ -98,6 +98,7 @@ Timezone CE(CEST, CET); //Central European Time (Frankfurt, Paris)
 Timezone timezones[] = {CE};
 
 byte timezone = 0;
+int delayMillis = 550;
 
 void setup() {
   Serial.begin(9600);
@@ -127,9 +128,13 @@ void setup() {
 
     FastLED.show();
     delay(1500); */
+  delayMillis = 550;
 
   loadSettings();
   //storeSettings();
+
+  // overrides:
+  effect = 6;
 
   Serial.println("initialized");
 }
@@ -148,6 +153,7 @@ void loop()
     case 3: showMatrix(foreground, background); break;
     case 4: showRollDown(foreground, background); break;
     case 5: showParty(foreground, background); break;
+    case 6: scanner(foreground, background); break;
     case 0:
     default:
       showSimple(foreground, background);
@@ -155,9 +161,9 @@ void loop()
   }
 
   FastLED.show();
-  delay(100);
+  delay(delayMillis);
 
-  if (loopCount % 10 == 0) {
+  if (loopCount % 20 == 0) {
     Serial.println("bt: check ...");
     handleBluetooth();
     Serial.println("bt: ... done");
@@ -283,6 +289,36 @@ void _fadeall() {
   for (int i = 0; i < 10 * 11; i++) {
     leds[i].nscale8(180);  //180
   }
+}
+
+
+int column = 0;
+int row = 0;
+time_t t = now();
+void scanner(CRGB on, CRGB off) {
+
+  column++;
+  if (column > 10) {
+    column = 0;
+    row++;
+    row = row % 10;
+  }
+
+  if (row == 0 && column == 0) {
+    fillLeds(off);
+    int duration = now() - t;
+    Serial.print("Duration(sec): ");
+    Serial.println(duration);
+    if (duration > 60) {
+      delayMillis = delayMillis - 50;
+    } else {
+      delayMillis = delayMillis + 50;
+    }
+    Serial.println(delayMillis);
+    t = now();
+  }
+  setLeds(row, column , on, 1, false);
+
 }
 
 /**
