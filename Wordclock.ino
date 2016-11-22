@@ -5,7 +5,7 @@
 #include <FastLED.h>
 #include <DS3232RTC.h>    //http://github.com/JChristensen/DS3232RTC
 #include <TimeLib.h>         //https://github.com/PaulStoffregen/Time
-#include <Timezone.h>     //https://github.com/JChristensen/Timezone
+// #include <Timezone.h>     //https://github.com/JChristensen/Timezone
 #include <Wire.h>         //http://arduino.cc/en/Reference/Wire (included with Arduino IDE)
 
 //#include <glcdfont.c>
@@ -58,7 +58,7 @@ CRGB background = CRGB(5, 5, 5); //CRGB(0, 255, 0) CRGB(10, 50, 5)
 /**
    Stores the effect number.
 */
-byte effect = 6;
+byte effect = 3;
 
 /**
    Hardware version.
@@ -73,8 +73,8 @@ bool showEsIst = true;
 
 //TimeChangeRule aEDT = {"AEDT", First, Sun, Oct, 2, 660};    //UTC + 11 hours
 //TimeChangeRule aEST = {"AEST", First, Sun, Apr, 3, 600};    //UTC + 10 hours
-TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120};     //Central European Summer Time
-TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, 60};       //Central European Standard Time
+// TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120};     //Central European Summer Time
+// TimeChangeRule CET = {"CET ", Last, Sun, Oct, 30, 60};       //Central European Standard Time
 //TimeChangeRule BST = {"BST", Last, Sun, Mar, 1, 60};        //British Summer Time
 //TimeChangeRule GMT = {"GMT", Last, Sun, Oct, 2, 0};         //Standard Time
 //TimeChangeRule usEDT = {"EDT", Second, Sun, Mar, 2, -240};  //Eastern Daylight Time = UTC - 4 hours
@@ -87,7 +87,7 @@ TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, 60};       //Central European S
 //TimeChangeRule usPST = {"PST", First, dowSunday, Nov, 2, -480};
 
 //Timezone ausET(aEDT, aEST); //Australia Eastern Time Zone (Sydney, Melbourne)
-Timezone CE(CEST, CET); //Central European Time (Frankfurt, Paris)
+// Timezone CE(CEST, CET); //Central European Time (Frankfurt, Paris)
 //Timezone UK(BST, GMT); //United Kingdom (London, Belfast)
 //Timezone usET(usEDT, usEST); //US Eastern Time Zone (New York, Detroit)
 //Timezone usCT(usCDT, usCST); //US Central Time Zone (Chicago, Houston)
@@ -95,10 +95,11 @@ Timezone CE(CEST, CET); //Central European Time (Frankfurt, Paris)
 //Timezone usAZ(usMST, usMST); //Arizona is US Mountain Time Zone but does not use DST
 //Timezone usPT(usPDT, usPST); //US Pacific Time Zone (Las Vegas, Los Angeles)
 
-Timezone timezones[] = {CE};
+// Timezone timezones[] = {CE};
 
-byte timezone = 0;
+// byte timezone = 0;
 int delayMillis = 550;
+time_t lastBt;
 
 void setup() {
   Serial.begin(9600);
@@ -128,18 +129,14 @@ void setup() {
 
     FastLED.show();
     delay(1500); */
-  delayMillis = 550;
+  delayMillis = 100;
 
   loadSettings();
   //storeSettings();
 
-  // overrides:
-  effect = 6;
-
+  lastBt = now();
   Serial.println("initialized");
 }
-
-int loopCount = 0;
 
 void loop()
 {
@@ -163,20 +160,20 @@ void loop()
   FastLED.show();
   delay(delayMillis);
 
-  if (loopCount % 20 == 0) {
+  if (now() - lastBt > 0) { // only check bluetooth at most once per second
+    Serial.println(now() - lastBt);
     Serial.println("bt: check ...");
     handleBluetooth();
     Serial.println("bt: ... done");
-    loopCount = 0;
+    lastBt = now();
   }
-  loopCount++;
 }
 
 /**
    Generates the words to show using the actual time.
 */
 void generateWords() {
-  time_t local = timezones[timezone].toLocal(now());
+  time_t local = now();
 
   clearWords();
 
@@ -421,15 +418,21 @@ void handleBluetooth() {
           byte d = btSerial.read();
           byte m = btSerial.read();
           byte y = btSerial.read();
+          Serial.print("Setting date to ");
+          Serial.print(d);
+          Serial.print('-');
+          Serial.print(m);
+          Serial.print('-');
+          Serial.println(y);
           setTime(hour(), minute(), second(), d, m, y);
           RTC.set(now());
           break;
         }
-      case 'Z': { //timeZone
-          timezone = btSerial.read();
-          btSerial.read(); btSerial.read();
-          break;
-        }
+//      case 'Z': { //timeZone
+//          timezone = btSerial.read();
+//          btSerial.read(); btSerial.read();
+//          break;
+//        }
       case 'S': {
           btSerial.read(); btSerial.read(); btSerial.read(); storeSettings();
           break;
@@ -466,11 +469,11 @@ void handleBluetooth() {
               btSerial.write(month());
               btSerial.write(year());
               break;
-            case 'Z':
-              btSerial.write('Z');
-              btSerial.write(timezone);
-              btSerial.write('Z'); btSerial.write('Z');
-              break;
+//            case 'Z':
+//              btSerial.write('Z');
+//              btSerial.write(timezone);
+//              btSerial.write('Z'); btSerial.write('Z');
+//              break;
           }
           btSerial.read(); btSerial.read();
           break;
@@ -596,7 +599,7 @@ void storeSettings() {
   EEPROM.write(6, effect);
   EEPROM.write(7, showEsIst);
   EEPROM.write(8, hwVersion);
-  EEPROM.write(9, timezone);
+  // EEPROM.write(9, timezone);
 }
 
 /**
@@ -612,7 +615,7 @@ void loadSettings() {
   effect =       EEPROM.read(6);
   showEsIst =    EEPROM.read(7);
   hwVersion =    EEPROM.read(8);
-  timezone =     EEPROM.read(9);
+  // timezone =     EEPROM.read(9);
 }
 
 /**
