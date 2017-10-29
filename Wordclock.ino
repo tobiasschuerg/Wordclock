@@ -52,7 +52,7 @@ byte const_words_length = 0;
 /**
    Fore- and background color for the letters.
 */
-CRGB foreground = CRGB(0, 0, 255);
+CRGB foreground = CRGB(0, 100, 100);
 CRGB background = CRGB(5, 5, 5); //CRGB(0, 255, 0) CRGB(10, 50, 5)
 
 /**
@@ -114,7 +114,7 @@ void setup() {
   //setup FastLED
   delay( 1000 ); // power-up safety delay
   FastLED.addLeds<NEOPIXEL, 7>(leds, 10 * 11 + 4);
-  FastLED.setBrightness(255);
+  FastLED.setBrightness(200);
 
   for (int i = 0; i < 10 * 11 + 4; i++) {
     leds[i] = CRGB::Red;
@@ -161,10 +161,8 @@ void loop()
   delay(delayMillis);
 
   if (now() - lastBt > 0) { // only check bluetooth at most once per second
-    Serial.println(now() - lastBt);
-    Serial.println("bt: check ...");
+    // Serial.println(now() - lastBt);
     handleBluetooth();
-    Serial.println("bt: ... done");
     lastBt = now();
   }
 }
@@ -371,12 +369,17 @@ void showParty(CRGB on, CRGB off) {
 /**
    Parses and executes the bluetooh commands.
 */
+int bt = 0;
 void handleBluetooth() {
+  bt++;
+  if (bt % 20 == 0) {
+    Serial.print("\n");
+  }
+  Serial.print("BT ");
   while (btSerial.available() >= 4) {
     byte type = btSerial.read();
-    //        Serial.print("~~BT:");
-    //        Serial.print((char) type);
-    //        Serial.print('\n');
+    Serial.print("\n~~BT: ");
+    Serial.print((char) type);
 
     switch (type) {
       case 'F': { //foreground color
@@ -384,6 +387,7 @@ void handleBluetooth() {
           byte green = btSerial.read();
           byte blue = btSerial.read();
           foreground = CRGB(red, green, blue);
+          Serial.println(foreground);
           break;
         }
       case 'B': { //background color
@@ -428,17 +432,22 @@ void handleBluetooth() {
           RTC.set(now());
           break;
         }
-//      case 'Z': { //timeZone
-//          timezone = btSerial.read();
-//          btSerial.read(); btSerial.read();
-//          break;
-//        }
+      //      case 'Z': { //timeZone
+      //          timezone = btSerial.read();
+      //          btSerial.read(); btSerial.read();
+      //          break;
+      //        }
       case 'S': {
-          btSerial.read(); btSerial.read(); btSerial.read(); storeSettings();
+          btSerial.read();
+          btSerial.read();
+          btSerial.read();
+          storeSettings();
           break;
         }
       case 'G': { //get
-          switch (btSerial.read()) {
+          byte toGet = btSerial.read();
+          Serial.println((char)toGet);
+          switch (toGet) {
             case 'F':
               btSerial.write('F');
               btSerial.write(foreground.r);
@@ -469,11 +478,11 @@ void handleBluetooth() {
               btSerial.write(month());
               btSerial.write(year());
               break;
-//            case 'Z':
-//              btSerial.write('Z');
-//              btSerial.write(timezone);
-//              btSerial.write('Z'); btSerial.write('Z');
-//              break;
+              //            case 'Z':
+              //              btSerial.write('Z');
+              //              btSerial.write(timezone);
+              //              btSerial.write('Z'); btSerial.write('Z');
+              //              break;
           }
           btSerial.read(); btSerial.read();
           break;
@@ -606,7 +615,7 @@ void storeSettings() {
    Loads settings from EEPROM.
 */
 void loadSettings() {
-  foreground.r = EEPROM.read(0);
+  foreground.r =  EEPROM.read(0);
   foreground.g = EEPROM.read(1);
   foreground.b = EEPROM.read(2);
   background.r = EEPROM.read(3);
